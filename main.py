@@ -15,7 +15,7 @@ features = np.zeros((NUM_TOTAL,NUM_FEATURES),dtype='int')
 prices = np.zeros(NUM_TOTAL,dtype='int')
 playercounter = 0 #never resets
 for filecounter in xrange(1,NUM_FILES+1): #process 1 file = 100 players
-    f = open(os.path.dirname(os.path.realpath(__file__))+'/p{0}.txt'.format(filecounter),'rb')
+    f = open(os.path.dirname(os.path.realpath(__file__))+'/data_files/p{0}.txt'.format(filecounter),'rb')
     lines = f.readlines()
     linecounter = 0 #resets for every new file
     while linecounter != len(lines):
