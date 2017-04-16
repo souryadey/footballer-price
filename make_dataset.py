@@ -14,16 +14,12 @@
 # Must login using Sourya's account credentials to get stats automatically arranged like this
 
 import numpy as np
-np.set_printoptions(threshold=np.inf) #View full arrays in console
 import os
 
-NUM_TRAIN = 10000
-NUM_VAL = 2000
-NUM_TEST = 2000
-NUM_TOTAL = NUM_TRAIN + NUM_VAL + NUM_TEST
+NUM_FILES = 154
+NUM_TOTAL = 15340
 NUM_FEATURES = 41
 NUM_100SCALEFEATURES = 37
-NUM_FILES = NUM_TOTAL/100
 #NUM_FILES = 1 #initial test case
 
 def gen_data():
@@ -31,7 +27,7 @@ def gen_data():
     features = np.zeros((NUM_TOTAL,NUM_FEATURES))
     prices = np.zeros(NUM_TOTAL)
     playercounter = 0 #never resets
-    for filecounter in xrange(1,NUM_FILES+1): #process 1 file = 100 players
+    for filecounter in xrange(1,NUM_FILES+1): #process 1 file = 100 players (except for last file)
         f = open(os.path.dirname(os.path.realpath(__file__))+'/data_files/p{0}.txt'.format(filecounter),'rb')
         lines = f.readlines()
         linecounter = 0 #resets for every new file
@@ -73,52 +69,6 @@ def gen_data():
         f.close()
         print '{0} players done'.format(playercounter) #track progress
     return (features,prices)
-
-def shuffle_data(features,prices):
-    ''' Shuffle features '''
-    np.random.seed(0) #To maintain consistency across runs
-    perm = np.random.permutation(NUM_TOTAL)
-    temp_features = np.zeros_like(features)
-    for p in xrange(len(perm)):
-        temp_features[p][:] = features[perm[p]][:]
-    features = temp_features
-    del temp_features
-    prices = prices[perm]
-    return (features,prices)
-
-def normalize(features):
-    ''' Normalize features by converting to N(0,1)'''
-    mu = np.mean(features, axis=0)
-    sigma = np.std(features, axis=0)
-    features = (features-mu)/sigma
-    return features
-
-def categorical_prices(prices,bins):
-    ''' Split prices into one-hot based on some intervals
-        bins: A list with the starting points of each interval and ending point of the last interval.
-            Must be in ascending order
-        Eg: If bins = [100,200,300,401], then there are 3 bins - [100,200), [200,300) and [300,401)
-            Then a price of 243 would show as [0,1,0]
-        Returns cat_prices of size (len(prices),len(bins)-1)
-    '''
-    cat_prices = np.zeros((len(prices),len(bins)-1))
-    for p in xrange(len(prices)):
-        for b in xrange(1,len(bins)):
-            if prices[p]<bins[b]:
-                cat_prices[p][b-1] = 1.
-                break
-    return cat_prices
-    
-
-def split_data(features,prices):
-    ''' Separate into training and test '''
-    xtr = features[:NUM_TRAIN+NUM_VAL][:]
-    ytr = prices[:NUM_TRAIN+NUM_VAL][:]
-    #xva = features[NUM_TRAIN:NUM_TRAIN+NUM_VAL][:]
-    #yva = prices[NUM_TRAIN:NUM_TRAIN+NUM_VAL][:]
-    xte = features[NUM_TRAIN+NUM_VAL:NUM_TOTAL][:]
-    yte = prices[NUM_TRAIN+NUM_VAL:NUM_TOTAL][:]
-    return (xtr,ytr,xte,yte)
 
 
 #%% Extra code: Trying to read webpage directly

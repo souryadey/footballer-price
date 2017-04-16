@@ -3,15 +3,39 @@
 # Modified and used by Sourya Dey with permission
 # Uses Deep Learning library Keras 1.1.1 <https://keras.io/>
 
+#%% Imports and constants
 import make_dataset as md
 import numpy as np
+np.set_printoptions(threshold=np.inf) #View full arrays in console
 import matplotlib.pyplot as plt
+from pprint import pprint
 
 from keras.layers import Dense
 from keras.models import Sequential
 import keras.regularizers as Reg
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping
+
+NUM_TEST = 2500
+NUM_TRAIN = md.NUM_TOTAL - NUM_TEST #12840
+#NUM_VAL = 2000
+
+
+#%% Data preprocessing
+def normalize(features):
+    ''' Normalize features by converting to N(0,1)'''
+    mu = np.mean(features, axis=0)
+    sigma = np.std(features, axis=0)
+    features = (features-mu)/sigma
+    return features
+
+def analyze_prices(prices):
+    ''' Return dictionary showing number of times each price occurs '''
+    pdict = {}
+    for p in prices:
+        if p in pdict.keys(): pdict[p] += 1
+        else: pdict[p] = 1
+    return pdict
 
 def opt_price_hist(prices,bins):
     ''' Try to get optimum distribution of prices by forming suitable bins '''
@@ -21,7 +45,72 @@ def opt_price_hist(prices,bins):
     binfreq = np.transpose(np.asarray((bins[:-1],hist))) #Frequency in each bin should be as equal as possible
     print binfreq
 
+def categorical_prices(prices,bins):
+    ''' Split prices into one-hot based on some intervals
+        bins: A list with the starting points of each interval and ending point of the last interval.
+            Must be in ascending order
+        Eg: If bins = [100,200,300,401], then there are 3 bins - [100,200), [200,300) and [300,401)
+            Then a price of 243 would show as [0,1,0]
+        Returns cat_prices of size (len(prices),len(bins)-1)
+    '''
+    cat_prices = np.zeros((len(prices),len(bins)))
+    for p in xrange(len(prices)):
+        if prices[p] <= bins[0]:
+            cat_prices[p][0] = 1. #round up lowest prices to min threshold price
+        elif prices[p] >= bins[-1]:
+            cat_prices[p][len(bins)-1] = 1. #round down highest prices to max threshold price 
+        else:
+            for b in xrange(len(bins)-2,0,-1):
+                if prices[p]>=bins[b]:
+                    cat_prices[p][b] = 1.
+                    break
+    return cat_prices
 
+def shuffle_data(features,prices):
+    ''' Shuffle features '''
+    np.random.seed(0) #To maintain consistency across runs
+    perm = np.random.permutation(md.NUM_TOTAL)
+    temp_features = np.zeros_like(features)
+    temp_prices = np.zeros_like(prices)
+    for p in xrange(len(perm)):
+        temp_features[p][:] = features[perm[p]][:]
+        temp_prices[p][:] = prices[perm[p]][:]
+    return (temp_features,temp_prices)
+
+def split_data(features,prices):
+    ''' Separate into training and test '''
+    xtr = features[:NUM_TRAIN][:]
+    ytr = prices[:NUM_TRAIN][:]
+    #xva = features[NUM_TRAIN:NUM_TRAIN+NUM_VAL][:]
+    #yva = prices[NUM_TRAIN:NUM_TRAIN+NUM_VAL][:]
+    xte = features[NUM_TRAIN:md.NUM_TOTAL][:]
+    yte = prices[NUM_TRAIN:md.NUM_TOTAL][:]
+    return (xtr,ytr,xte,yte)
+
+features,prices = md.gen_data()
+features = normalize(features)
+prices_dict = analyze_prices(prices)
+#pprint(prices_dict)
+prices_prebins = sorted(prices_dict.keys())
+prices_bins = [prices_prebins[prices_prebins.index(43):prices_prebins.index(12400)],[13000,14000,15100,16200,18400,20500,22100,24800,28600,36700]]
+prices_bins = [item for sublist in prices_bins for item in sublist] #flatten list
+cat_prices = categorical_prices(prices,prices_bins)
+features,cat_prices = shuffle_data(features,cat_prices)
+xtr,ytr,xte,yte = split_data(features,cat_prices)
+#del (features,cat_prices)
+
+#bins = [int(min(prices)),170,190,210,230,250,275,300,315,350,375,400,425,450,475,
+#        500,525,550,575,600,625,650,700,720,740,780,810,840,870,900,
+#        940,980,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2250,2500,2750,
+#        3000,3300,3600,3900,4200,4500,5000,5500,6000,7000,8500,10000,16000,22000,30000,int(max(prices))+1]
+#bins = [int(min(prices)),200,250,300,350,400,450,500,
+#        550,600,675,750,825,900,1000,
+#        1100,1200,1300,1500,1700,1900,2200,2700,
+#        3200,3800,4500,5500,7000,10000,20000,int(max(prices))+1]
+#opt_price_hist(prices,bins) #Comment out this line when running NN
+
+
+#%% Neural network
 def genmodel(num_units, actfn='relu', reg_coeff=0.0, last_act='softmax'):
     '''
     Generate a neural network model of approporiate architecture
@@ -70,18 +159,22 @@ def testmodels(xtr,ytr,xte,yte, archs=[], actfn='relu', last_act='softmax', reg_
     '''
     best_acc = 0
     best_config = []
-    call_ES = EarlyStopping(monitor='val_acc', patience=6, verbose=1, mode='auto')
+    best_model = None
+    best_mse = np.inf
+    best_config_mse = []
+    best_model_mse = None
+    call_ES = EarlyStopping(monitor='val_acc', patience=10, verbose=1, mode='auto')
     for arch in archs:
         for reg_coeff in reg_coeffs:
             for sgd_decay in sgd_decays:
                 for sgd_mom in sgd_moms:
                     model = genmodel(num_units=arch, actfn=actfn, reg_coeff=reg_coeff, last_act=last_act)
                     sgd = SGD(lr=sgd_lr, decay=sgd_decay, momentum=sgd_mom, nesterov=sgd_Nesterov)
-                    model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+                    model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy','mse'])
                     # Train Model
                     if EStop:
                         model.fit(xtr,ytr, nb_epoch=num_epoch, batch_size=batch_size, verbose=verbose, 
-                                  callbacks=[call_ES], validation_split=0.17, shuffle=True)
+                                  callbacks=[call_ES], validation_split=0.15, shuffle=True)
                     else:
                         model.fit(xtr,ytr, nb_epoch=num_epoch, batch_size=batch_size, verbose=verbose)
                     # Evaluate Models
@@ -90,33 +183,25 @@ def testmodels(xtr,ytr,xte,yte, archs=[], actfn='relu', last_act='softmax', reg_
                         best_acc = score[1]
                         best_config = [arch, reg_coeff, sgd_decay, sgd_mom, actfn, best_acc]
                         best_model = model
-                    print 'Score for architecture = {0}, lambda = {1}, decay = {2}, momentum = {3}, actfn = {4}: {5}'.format(arch, reg_coeff, sgd_decay, sgd_mom, actfn, score[1])
+                    if score[2] < best_mse:
+                        best_mse = score[2]
+                        best_config_mse = [arch, reg_coeff, sgd_decay, sgd_mom, actfn, best_mse]
+                        best_model_mse = model
+                    print 'Score for architecture = {0}, lambda = {1}, decay = {2}, momentum = {3}, actfn = {4}: Acc = {5}, MSE = {6}'.format(arch, reg_coeff, sgd_decay, sgd_mom, actfn, score[1], score[2])
     print 'Best Config: architecture = {0}, lambda = {1}, decay = {2}, momentum = {3}, actfn = {4}, best_acc = {5}'.format(best_config[0], best_config[1], best_config[2], best_config[3], best_config[4], best_config[5])
-    return best_model
+    print 'Best Config MSE: architecture = {0}, lambda = {1}, decay = {2}, momentum = {3}, actfn = {4}, best_mse = {5}'.format(best_config_mse[0], best_config_mse[1], best_config_mse[2], best_config_mse[3], best_config_mse[4], best_config_mse[5])
+    return (best_model,best_model_mse)
 
-#%% Data preprocessing
-features,prices = md.gen_data()
-features,prices = md.shuffle_data(features,prices)
-features = md.normalize(features)
-#bins = [int(min(prices)),170,190,210,230,250,275,300,315,350,375,400,425,450,475,
-#        500,525,550,575,600,625,650,700,720,740,780,810,840,870,900,
-#        940,980,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2250,2500,2750,
-#        3000,3300,3600,3900,4200,4500,5000,5500,6000,7000,8500,10000,16000,22000,30000,int(max(prices))+1]
-bins = [int(min(prices)),200,250,300,350,400,450,500,
-        550,600,675,750,825,900,1000,
-        1100,1200,1300,1500,1700,1900,2200,2700,
-        3200,3800,4500,5500,7000,10000,20000,int(max(prices))+1]
-#opt_price_hist(prices,bins) #Comment out this line when running NN
-cat_prices = md.categorical_prices(prices,bins)
-xtr,ytr,xte,yte = md.split_data(features,cat_prices)
-del (features,prices)
 
-#%% Run Neural Network
-model = testmodels(xtr,ytr,xte,yte,
-           archs=[[len(xtr[1]),1000,len(ytr[1])]],
-           num_epoch=100, batch_size=10, reg_coeffs=[1e-5], sgd_lr=0.0001, verbose=1)
+nin = len(xtr[1])
+nout = len(ytr[1])
+archs = [[nin,a,nout] for a in xrange(100,2100,100)]
+model,model_mse = testmodels(xtr,ytr,xte,yte,
+           archs=archs, sgd_lr=1e-4, EStop=True,
+           num_epoch=100, batch_size=10, verbose=1)
 
 #%% Do specific input tests
-num = 10
+num = 30
 print model.predict_classes(xte[:num],verbose=0)
+print model_mse.predict_classes(xte[:num],verbose=0)
 print np.argmax(yte[:num],axis=1)
