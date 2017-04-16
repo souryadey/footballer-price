@@ -13,12 +13,10 @@
 # Finally is Value, i.e. player price, which is the output variable
 # Must login using Sourya's account credentials to get stats automatically arranged like this
 
-#%% Imports
 import numpy as np
 np.set_printoptions(threshold=np.inf) #View full arrays in console
 import os
 
-#%% Constants
 NUM_TRAIN = 10000
 NUM_VAL = 2000
 NUM_TEST = 2000
@@ -28,8 +26,8 @@ NUM_100SCALEFEATURES = 37
 NUM_FILES = NUM_TOTAL/100
 #NUM_FILES = 1 #initial test case
 
-#%% Generate X and Y datasets - features and prices
 def gen_data():
+    ''' Generate X and Y datasets - features and prices '''
     features = np.zeros((NUM_TOTAL,NUM_FEATURES))
     prices = np.zeros(NUM_TOTAL)
     playercounter = 0 #never resets
@@ -63,10 +61,10 @@ def gen_data():
                 price = '' #all PRICES IN USDx1000
                 for char in lines[linecounter].strip()[2:]: #price line
                     if char=='M': #million
-                        price = float(price)/100
+                        price = float(price)*1000
                         break                    
                     elif char=='K': #thousand
-                        price = float(price)/100000 
+                        price = float(price)
                         break
                     price += char
                 prices[playercounter] = price
@@ -76,8 +74,9 @@ def gen_data():
         print '{0} players done'.format(playercounter) #track progress
     return (features,prices)
 
-#%% Shuffle features
 def shuffle_data(features,prices):
+    ''' Shuffle features '''
+    np.random.seed(0) #To maintain consistency across runs
     perm = np.random.permutation(NUM_TOTAL)
     temp_features = np.zeros_like(features)
     for p in xrange(len(perm)):
@@ -87,22 +86,39 @@ def shuffle_data(features,prices):
     prices = prices[perm]
     return (features,prices)
 
-#%% Normalize features
 def normalize(features):
+    ''' Normalize features by converting to N(0,1)'''
     mu = np.mean(features, axis=0)
     sigma = np.std(features, axis=0)
     features = (features-mu)/sigma
     return features
 
-#%% Separate into training, validation, test
+def categorical_prices(prices,bins):
+    ''' Split prices into one-hot based on some intervals
+        bins: A list with the starting points of each interval and ending point of the last interval.
+            Must be in ascending order
+        Eg: If bins = [100,200,300,401], then there are 3 bins - [100,200), [200,300) and [300,401)
+            Then a price of 243 would show as [0,1,0]
+        Returns cat_prices of size (len(prices),len(bins)-1)
+    '''
+    cat_prices = np.zeros((len(prices),len(bins)-1))
+    for p in xrange(len(prices)):
+        for b in xrange(1,len(bins)):
+            if prices[p]<bins[b]:
+                cat_prices[p][b-1] = 1.
+                break
+    return cat_prices
+    
+
 def split_data(features,prices):
-    xtr = features[:NUM_TRAIN][:]
-    ytr = prices[:NUM_TRAIN]
-    xva = features[NUM_TRAIN:NUM_TRAIN+NUM_VAL][:]
-    yva = prices[NUM_TRAIN:NUM_TRAIN+NUM_VAL]
+    ''' Separate into training and test '''
+    xtr = features[:NUM_TRAIN+NUM_VAL][:]
+    ytr = prices[:NUM_TRAIN+NUM_VAL][:]
+    #xva = features[NUM_TRAIN:NUM_TRAIN+NUM_VAL][:]
+    #yva = prices[NUM_TRAIN:NUM_TRAIN+NUM_VAL][:]
     xte = features[NUM_TRAIN+NUM_VAL:NUM_TOTAL][:]
-    yte = prices[NUM_TRAIN+NUM_VAL:NUM_TOTAL]
-    return (xtr,ytr,xva,yva,xte,yte)
+    yte = prices[NUM_TRAIN+NUM_VAL:NUM_TOTAL][:]
+    return (xtr,ytr,xte,yte)
 
 
 #%% Extra code: Trying to read webpage directly
