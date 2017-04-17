@@ -141,8 +141,8 @@ def genmodel(num_units, actfn='relu', reg_coeff=0.0, last_act='softmax'):
     return model
 
 
-def testmodels(xtr,ytr,xte,yte, num_epoch=100, batch_size=1, actfn='relu', last_act='softmax',
-               EStop=True, verbose=1, archs=[], reg_coeffs=[0.0],  
+def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_act='softmax',
+               EStop=True, verbose=1, archs=[], reg_coeffs=[0.0],
                sgd_lrs=[1e-4], sgd_decays=[0.0], sgd_moms=[0.0], sgd_Nesterov=False,
                results_file='results.txt'):
     '''
@@ -212,15 +212,15 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=100, batch_size=1, actfn='relu', last_
 #                             results_file = 'trial.txt')
 
 #%% Vary batch sizes only
-model,model_mse = testmodels(xtr,ytr,xte,yte, batch_size=1, 
-                             archs=[[nin,1000,nout]],
-                             results_file = 'batch_size.txt')
+#model,model_mse = testmodels(xtr,ytr,xte,yte, batch_size=1, 
+#                             archs=[[nin,1000,nout]],
+#                             results_file = 'batch_size.txt')
 
 #%% Vary architectures only
-#archs = [[nin,a,nout] for a in xrange(200,4001,200)]
-#model,model_mse = testmodels(xtr,ytr,xte,yte, 
-#                             archs=archs,
-#                             results_file = 'archs.txt')                         
+archs = [[nin,a,nout] for a in xrange(100,5001,100)]
+model,model_mse = testmodels(xtr,ytr,xte,yte, 
+                             archs=archs,
+                             results_file = 'archs.txt')                         
            
 #%% Do specific input tests
 num = 30
