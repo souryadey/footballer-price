@@ -165,9 +165,9 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
     best_acc = 0
     best_config = []
     best_model = None
-    best_mse = np.inf
-    best_config_mse = []
-    best_model_mse = None
+#    best_mse = np.inf
+#    best_config_mse = []
+#    best_model_mse = None
     call_ES = EarlyStopping(monitor='val_acc', patience=10, verbose=1, mode='auto')
     for arch in archs:
         for reg_coeff in reg_coeffs:
@@ -177,7 +177,7 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
                         print 'Starting architecture = {0}, lambda = {1}, eta = {2}, decay = {3}, momentum = {4}, actfn = {5}'.format(arch, reg_coeff, sgd_lr, sgd_decay, sgd_mom, actfn)
                         model = genmodel(num_units=arch, actfn=actfn, reg_coeff=reg_coeff, last_act=last_act)
                         sgd = SGD(lr=sgd_lr, decay=sgd_decay, momentum=sgd_mom, nesterov=sgd_Nesterov)
-                        model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy','mse'])
+                        model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
                         # Train Model
                         if EStop:
                             model.fit(xtr,ytr, nb_epoch=num_epoch, batch_size=batch_size, verbose=verbose, 
@@ -190,21 +190,21 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
                             best_acc = score[1]
                             best_config = [arch, reg_coeff, sgd_lr, sgd_decay, sgd_mom, actfn, best_acc]
                             best_model = model
-                        if score[2] < best_mse:
-                            best_mse = score[2]
-                            best_config_mse = [arch, reg_coeff, sgd_lr, sgd_decay, sgd_mom, actfn, best_mse]
-                            best_model_mse = model
-                        result = 'Score for architecture = {0}, lambda = {1}, eta = {2}, decay = {3}, momentum = {4}, actfn = {5}: Acc = {6}%, MSE = {7}\n'.format(arch, reg_coeff, sgd_lr, sgd_decay, sgd_mom, actfn, score[1]*100, score[2])
+#                        if score[2] < best_mse:
+#                            best_mse = score[2]
+#                            best_config_mse = [arch, reg_coeff, sgd_lr, sgd_decay, sgd_mom, actfn, best_mse]
+#                            best_model_mse = model
+                        result = 'Score for architecture = {0}, lambda = {1}, eta = {2}, decay = {3}, momentum = {4}, actfn = {5}: Acc = {6}%\n'.format(arch, reg_coeff, sgd_lr, sgd_decay, sgd_mom, actfn, score[1]*100)
                         print result
                         f.write(result)
     final_result_acc = 'Best Config: architecture = {0}, lambda = {1}, eta = {2}, decay = {3}, momentum = {4}, actfn = {5}, best_acc = {6}%\n'.format(best_config[0], best_config[1], best_config[2], best_config[3], best_config[4], best_config[5], best_config[6]*100)
-    final_result_mse = 'Best Config MSE: architecture = {0}, lambda = {1}, eta = {2}, decay = {3}, momentum = {4}, actfn = {5}, best_mse = {6}\n'.format(best_config_mse[0], best_config_mse[1], best_config_mse[2], best_config_mse[3], best_config_mse[4], best_config_mse[5], best_config_mse[6])
     print final_result_acc
-    print final_result_mse
     f.write(final_result_acc)
-    f.write(final_result_mse)
+#    final_result_mse = 'Best Config MSE: architecture = {0}, lambda = {1}, eta = {2}, decay = {3}, momentum = {4}, actfn = {5}, best_mse = {6}\n'.format(best_config_mse[0], best_config_mse[1], best_config_mse[2], best_config_mse[3], best_config_mse[4], best_config_mse[5], best_config_mse[6])
+#    print final_result_mse
+#    f.write(final_result_mse)
     f.close()
-    return (best_model,best_model_mse)
+    return best_model
 
 #%% Trial
 #model,model_mse = testmodels(xtr,ytr,xte,yte, batch_size=100, 
@@ -217,13 +217,28 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
 #                             results_file = 'batch_size.txt')
 
 #%% Vary architectures only
-archs = [[nin,a,nout] for a in xrange(100,5001,100)]
-model,model_mse = testmodels(xtr,ytr,xte,yte, 
-                             archs=archs,
-                             results_file = 'archs.txt')                         
+#archs = [[nin,a,nout] for a in xrange(100,5001,100)]
+#model,model_mse = testmodels(xtr,ytr,xte,yte, 
+#                             archs=archs,
+#                             results_file = 'archs.txt')
+
+#%% Vary activation functions over architectures
+#Possiblities are [relu,soft], [sigm,soft], [tanh,soft], [relu,sigm], [sigm,sigm], [tanh,sigm]
+#[relu,soft] is default. Here I'm trying the next 3
+archs = [[nin,a,nout] for a in xrange(500,4501,1000)]
+model = testmodels(xtr,ytr,xte,yte, actfn='sigmoid',
+                   archs=archs,
+                   results_file = 'act_sigmoid.txt')
+model = testmodels(xtr,ytr,xte,yte, actfn='tanh',
+                   archs=archs,
+                   results_file = 'act_tanh.txt')
+model = testmodels(xtr,ytr,xte,yte, last_act='sigmoid',
+                   archs=archs,
+                   results_file = 'lastact_sigmoid.txt')
+
            
 #%% Do specific input tests
-num = 30
-print model.predict_classes(xte[:num],verbose=0)
-print model_mse.predict_classes(xte[:num],verbose=0)
-print np.argmax(yte[:num],axis=1)
+#num = 30
+#print model.predict_classes(xte[:num],verbose=0)
+##print model_mse.predict_classes(xte[:num],verbose=0)
+#print np.argmax(yte[:num],axis=1)
