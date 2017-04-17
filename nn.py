@@ -237,10 +237,25 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
 #                   results_file = 'lastact_sigmoid.txt')
 
 #%% Vary number of hidden layers in architecture only
-archs = [[nin,2000,3000,nout],[nin,2000,2000,nout],[nin,2000,1500,nout],[nin,2000,1000,nout],[nin,2000,500,nout],[nin,2000,nout,nout]]
+#archs = [[nin,2000,3000,nout],[nin,2000,2000,nout],[nin,2000,1500,nout],[nin,2000,1000,nout],[nin,2000,500,nout],[nin,2000,nout,nout]]
+#model = testmodels(xtr,ytr,xte,yte,
+#                   archs=archs,
+#                   results_file = 'archs_2hiddenlayers.txt')
+#model = testmodels(xtr,ytr,xte,yte,
+#                   archs=[[nin,2200,1500,nout]],
+#                   results_file = 'particular_2hiddenlayer.txt')
+
+#%% Vary eta and archs
+sgd_lrs = [1e-6,1e-5,5e-5,5e-4,1e-3,1e-2]
+archs = [[nin,900,nout],[nin,1700,nout],[nin,2100,nout],[nin,2900,nout],[nin,3900,nout],[nin,4600,nout]]
 model = testmodels(xtr,ytr,xte,yte,
                    archs=archs,
-                   results_file = 'archs_2hiddenlayers.txt')
+                   sgd_lrs=sgd_lrs,
+                   results_file = 'etas_1hiddenlayer.txt')
+model = testmodels(xtr,ytr,xte,yte,
+                   archs=[[nin,3900,1500,nout]],
+                   sgd_lrs=sgd_lrs,
+                   results_file = 'etas_particular_2hiddenlayer.txt')
 
 
            
