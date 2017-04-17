@@ -8,6 +8,7 @@ import make_dataset as md
 import numpy as np
 np.set_printoptions(threshold=np.inf) #View full arrays in console
 import matplotlib.pyplot as plt
+import os
 from pprint import pprint
 
 from keras.layers import Dense
@@ -97,6 +98,8 @@ prices_bins = [item for sublist in prices_bins for item in sublist] #flatten lis
 cat_prices = categorical_prices(prices,prices_bins)
 features,cat_prices = shuffle_data(features,cat_prices)
 xtr,ytr,xte,yte = split_data(features,cat_prices)
+nin = len(xtr[1])
+nout = len(ytr[1])
 #del (features,cat_prices)
 
 #bins = [int(min(prices)),170,190,210,230,250,275,300,315,350,375,400,425,450,475,
@@ -138,9 +141,10 @@ def genmodel(num_units, actfn='relu', reg_coeff=0.0, last_act='softmax'):
     return model
 
 
-def testmodels(xtr,ytr,xte,yte, archs=[], actfn='relu', last_act='softmax', reg_coeffs=[0.0], 
-               num_epoch=50, batch_size=100, sgd_lr=1e-5, sgd_decays=[0.0], sgd_moms=[0.0], 
-               sgd_Nesterov=False, EStop=False, verbose=0):
+def testmodels(xtr,ytr,xte,yte, num_epoch=100, batch_size=1, actfn='relu', last_act='softmax',
+               EStop=True, verbose=1, archs=[], reg_coeffs=[0.0],  
+               sgd_lrs=[1e-4], sgd_decays=[0.0], sgd_moms=[0.0], sgd_Nesterov=False,
+               results_file='results.txt'):
     '''
     Train and test neural network architectures with varying parameters
         xtr, ytr, xte, yte: (Training and test) (features and prices)
@@ -157,6 +161,7 @@ def testmodels(xtr,ytr,xte,yte, archs=[], actfn='relu', last_act='softmax', reg_
         EStop: Boolean variable to use/not use early stopping
         verbose: 0 or 1 to determine whether keras gives out training and test progress report
     '''
+    f = open(os.path.dirname(os.path.realpath(__file__))+'/result_files/'+results_file,'wb')
     best_acc = 0
     best_config = []
     best_model = None
@@ -166,40 +171,57 @@ def testmodels(xtr,ytr,xte,yte, archs=[], actfn='relu', last_act='softmax', reg_
     call_ES = EarlyStopping(monitor='val_acc', patience=10, verbose=1, mode='auto')
     for arch in archs:
         for reg_coeff in reg_coeffs:
-            for sgd_decay in sgd_decays:
-                for sgd_mom in sgd_moms:
-                    model = genmodel(num_units=arch, actfn=actfn, reg_coeff=reg_coeff, last_act=last_act)
-                    sgd = SGD(lr=sgd_lr, decay=sgd_decay, momentum=sgd_mom, nesterov=sgd_Nesterov)
-                    model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy','mse'])
-                    # Train Model
-                    if EStop:
-                        model.fit(xtr,ytr, nb_epoch=num_epoch, batch_size=batch_size, verbose=verbose, 
-                                  callbacks=[call_ES], validation_split=0.15, shuffle=True)
-                    else:
-                        model.fit(xtr,ytr, nb_epoch=num_epoch, batch_size=batch_size, verbose=verbose)
-                    # Evaluate Models
-                    score = model.evaluate(xte,yte, batch_size=batch_size, verbose=verbose)
-                    if score[1] > best_acc:
-                        best_acc = score[1]
-                        best_config = [arch, reg_coeff, sgd_decay, sgd_mom, actfn, best_acc]
-                        best_model = model
-                    if score[2] < best_mse:
-                        best_mse = score[2]
-                        best_config_mse = [arch, reg_coeff, sgd_decay, sgd_mom, actfn, best_mse]
-                        best_model_mse = model
-                    print 'Score for architecture = {0}, lambda = {1}, decay = {2}, momentum = {3}, actfn = {4}: Acc = {5}, MSE = {6}'.format(arch, reg_coeff, sgd_decay, sgd_mom, actfn, score[1], score[2])
-    print 'Best Config: architecture = {0}, lambda = {1}, decay = {2}, momentum = {3}, actfn = {4}, best_acc = {5}'.format(best_config[0], best_config[1], best_config[2], best_config[3], best_config[4], best_config[5])
-    print 'Best Config MSE: architecture = {0}, lambda = {1}, decay = {2}, momentum = {3}, actfn = {4}, best_mse = {5}'.format(best_config_mse[0], best_config_mse[1], best_config_mse[2], best_config_mse[3], best_config_mse[4], best_config_mse[5])
+            for sgd_lr in sgd_lrs:
+                for sgd_decay in sgd_decays:
+                    for sgd_mom in sgd_moms:
+                        print 'Starting architecture = {0}, lambda = {1}, eta = {2}, decay = {3}, momentum = {4}, actfn = {5}'.format(arch, reg_coeff, sgd_lr, sgd_decay, sgd_mom, actfn)
+                        model = genmodel(num_units=arch, actfn=actfn, reg_coeff=reg_coeff, last_act=last_act)
+                        sgd = SGD(lr=sgd_lr, decay=sgd_decay, momentum=sgd_mom, nesterov=sgd_Nesterov)
+                        model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy','mse'])
+                        # Train Model
+                        if EStop:
+                            model.fit(xtr,ytr, nb_epoch=num_epoch, batch_size=batch_size, verbose=verbose, 
+                                      callbacks=[call_ES], validation_split=0.15, shuffle=True)
+                        else:
+                            model.fit(xtr,ytr, nb_epoch=num_epoch, batch_size=batch_size, verbose=verbose)
+                        # Evaluate Models
+                        score = model.evaluate(xte,yte, batch_size=batch_size, verbose=verbose)
+                        if score[1] > best_acc:
+                            best_acc = score[1]
+                            best_config = [arch, reg_coeff, sgd_lr, sgd_decay, sgd_mom, actfn, best_acc]
+                            best_model = model
+                        if score[2] < best_mse:
+                            best_mse = score[2]
+                            best_config_mse = [arch, reg_coeff, sgd_lr, sgd_decay, sgd_mom, actfn, best_mse]
+                            best_model_mse = model
+                        result = 'Score for architecture = {0}, lambda = {1}, eta = {2}, decay = {3}, momentum = {4}, actfn = {5}: Acc = {6}%, MSE = {7}\n'.format(arch, reg_coeff, sgd_lr, sgd_decay, sgd_mom, actfn, score[1]*100, score[2])
+                        print result
+                        f.write(result)
+    final_result_acc = 'Best Config: architecture = {0}, lambda = {1}, eta = {2}, decay = {3}, momentum = {4}, actfn = {5}, best_acc = {6}%\n'.format(best_config[0], best_config[1], best_config[2], best_config[3], best_config[4], best_config[5], best_config[6]*100)
+    final_result_mse = 'Best Config MSE: architecture = {0}, lambda = {1}, eta = {2}, decay = {3}, momentum = {4}, actfn = {5}, best_mse = {6}\n'.format(best_config_mse[0], best_config_mse[1], best_config_mse[2], best_config_mse[3], best_config_mse[4], best_config_mse[5], best_config_mse[6])
+    print final_result_acc
+    print final_result_mse
+    f.write(final_result_acc)
+    f.write(final_result_mse)
+    f.close()
     return (best_model,best_model_mse)
 
+#%% Trial
+#model,model_mse = testmodels(xtr,ytr,xte,yte, batch_size=100, 
+#                             archs=[[nin,300,nout],[nin,500,nout]],
+#                             results_file = 'trial.txt')
 
-nin = len(xtr[1])
-nout = len(ytr[1])
-archs = [[nin,a,nout] for a in xrange(100,2100,100)]
-model,model_mse = testmodels(xtr,ytr,xte,yte,
-           archs=archs, sgd_lr=1e-4, EStop=True,
-           num_epoch=100, batch_size=10, verbose=1)
+#%% Vary batch sizes only
+model,model_mse = testmodels(xtr,ytr,xte,yte, batch_size=1, 
+                             archs=[[nin,1000,nout]],
+                             results_file = 'batch_size.txt')
 
+#%% Vary architectures only
+#archs = [[nin,a,nout] for a in xrange(200,4001,200)]
+#model,model_mse = testmodels(xtr,ytr,xte,yte, 
+#                             archs=archs,
+#                             results_file = 'archs.txt')                         
+           
 #%% Do specific input tests
 num = 30
 print model.predict_classes(xte[:num],verbose=0)
