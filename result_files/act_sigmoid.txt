@@ -1,0 +1,6 @@
+Score for architecture = [41, 500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = sigmoid: Acc = 3.80000006855%
+Score for architecture = [41, 1500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = sigmoid: Acc = 3.80000006855%
+Score for architecture = [41, 2500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = sigmoid: Acc = 3.80000006855%
+Score for architecture = [41, 3500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = sigmoid: Acc = 3.80000006855%
+Score for architecture = [41, 4500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = sigmoid: Acc = 3.80000006855%
+Best Config: architecture = [41, 500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = sigmoid, best_acc = 3.80000006855%

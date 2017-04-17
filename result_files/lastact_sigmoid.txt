@@ -1,0 +1,6 @@
+Score for architecture = [41, 500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 1.40000002086%
+Score for architecture = [41, 1500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 1.72000002563%
+Score for architecture = [41, 2500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 3.92000007033%
+Score for architecture = [41, 3500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 4.20000008643%
+Score for architecture = [41, 4500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 4.92000008523%
+Best Config: architecture = [41, 4500, 119], lambda = 0.0, eta = 0.0001, decay = 0.0, momentum = 0.0, actfn = relu, best_acc = 4.92000008523%
