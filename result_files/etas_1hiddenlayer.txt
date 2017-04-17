@@ -4,6 +4,7 @@ Score for architecture = [41, 900, 119], lambda = 0.0, eta = 5e-05, decay = 0.0,
 Score for architecture = [41, 900, 119], lambda = 0.0, eta = 0.0005, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 6.36000013053%
 Score for architecture = [41, 900, 119], lambda = 0.0, eta = 0.001, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 7.36000013649%
 Score for architecture = [41, 900, 119], lambda = 0.0, eta = 0.01, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 12.5600002468%
+Score for architecture = [41, 900, 119], lambda = 0.0, eta = 0.1, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 14.2800002784%
 Score for architecture = [41, 1700, 119], lambda = 0.0, eta = 1e-06, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 0.640000009537%
 Score for architecture = [41, 1700, 119], lambda = 0.0, eta = 1e-05, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 1.52000002563%
 Score for architecture = [41, 1700, 119], lambda = 0.0, eta = 5e-05, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 1.32000001967%
@@ -16,6 +17,15 @@ Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 5e-05, decay = 0.0
 Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.0005, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 5.96000011861%
 Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.001, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 7.08000015914%
 Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.01, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 12.440000242%
+Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.02, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 15.4000002801%
+Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.03, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 15.8800002456%
+Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.04, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 15.9600003749%
+Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.05, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 15.440000239%
+Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.06, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 15.7200002849%
+Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.07, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 15.9200003177%
+Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.08, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 15.5600003541%
+Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.09, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 14.0000002861%
+Score for architecture = [41, 2100, 119], lambda = 0.0, eta = 0.1, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 15.6800003052%
 Score for architecture = [41, 2900, 119], lambda = 0.0, eta = 1e-06, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 0.880000013113%
 Score for architecture = [41, 2900, 119], lambda = 0.0, eta = 1e-05, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 1.40000002086%
 Score for architecture = [41, 2900, 119], lambda = 0.0, eta = 5e-05, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 4.96000010073%
@@ -35,3 +45,5 @@ Score for architecture = [41, 4600, 119], lambda = 0.0, eta = 0.0005, decay = 0.
 Score for architecture = [41, 4600, 119], lambda = 0.0, eta = 0.001, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 7.52000015974%
 Score for architecture = [41, 4600, 119], lambda = 0.0, eta = 0.01, decay = 0.0, momentum = 0.0, actfn = relu: Acc = 12.7600002736%
 Best Config: architecture = [41, 1700, 119], lambda = 0.0, eta = 0.01, decay = 0.0, momentum = 0.0, actfn = relu, best_acc = 13.120000264%
+Best Config: architecture = [41, 2100, 119], lambda = 0.0, eta = 0.04, decay = 0.0, momentum = 0.0, actfn = relu, best_acc = 15.9600003749%
+

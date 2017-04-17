@@ -40,6 +40,8 @@ def analyze_prices(prices):
 
 def opt_price_hist(prices,bins):
     ''' Try to get optimum distribution of prices by forming suitable bins '''
+    if bins[0]!=min(prices): bins.insert(0,min(prices))
+    if bins[-1]<=max(prices): bins.append(max(prices)+1) #so that max values in prices have their own bin and don't fall in previous bin
     hist = np.histogram(prices,bins=bins)[0]
     plt.stem(bins[:-1],hist) #Should be as horizontally even as possible
     plt.show()
@@ -47,25 +49,31 @@ def opt_price_hist(prices,bins):
     print binfreq
 
 def categorical_prices(prices,bins):
-    ''' Split prices into one-hot based on some intervals
+    ''' Main function: Split prices into one-hot based on intervals in bins
+        Side function: Create new price array which rounds outliers based on intervals in bins
         bins: A list with the starting points of each interval and ending point of the last interval.
             Must be in ascending order
         Eg: If bins = [100,200,300,401], then there are 3 bins - [100,200), [200,300) and [300,401)
             Then a price of 243 would show as [0,1,0]
         Returns cat_prices of size (len(prices),len(bins)-1)
+        Also returns rounded_prices: the new price array. This is used for histogram plotting
     '''
     cat_prices = np.zeros((len(prices),len(bins)))
+    rounded_prices = np.zeros_like(prices)
     for p in xrange(len(prices)):
         if prices[p] <= bins[0]:
             cat_prices[p][0] = 1. #round up lowest prices to min threshold price
+            rounded_prices[p] = bins[0]
         elif prices[p] >= bins[-1]:
             cat_prices[p][len(bins)-1] = 1. #round down highest prices to max threshold price 
+            rounded_prices[p] = bins[-1]
         else:
             for b in xrange(len(bins)-2,0,-1):
                 if prices[p]>=bins[b]:
                     cat_prices[p][b] = 1.
+                    rounded_prices[p] = bins[b]
                     break
-    return cat_prices
+    return (cat_prices,rounded_prices)
 
 def shuffle_data(features,prices):
     ''' Shuffle features '''
@@ -95,7 +103,7 @@ prices_dict = analyze_prices(prices)
 prices_prebins = sorted(prices_dict.keys())
 prices_bins = [prices_prebins[prices_prebins.index(43):prices_prebins.index(12400)],[13000,14000,15100,16200,18400,20500,22100,24800,28600,36700]]
 prices_bins = [item for sublist in prices_bins for item in sublist] #flatten list
-cat_prices = categorical_prices(prices,prices_bins)
+cat_prices,rounded_prices = categorical_prices(prices,prices_bins)
 features,cat_prices = shuffle_data(features,cat_prices)
 xtr,ytr,xte,yte = split_data(features,cat_prices)
 nin = len(xtr[1])
@@ -110,7 +118,7 @@ nout = len(ytr[1])
 #        550,600,675,750,825,900,1000,
 #        1100,1200,1300,1500,1700,1900,2200,2700,
 #        3200,3800,4500,5500,7000,10000,20000,int(max(prices))+1]
-#opt_price_hist(prices,bins) #Comment out this line when running NN
+#opt_price_hist(rounded_prices,prices_bins) #Comment out this line when running NN
 
 
 #%% Neural network
@@ -143,7 +151,7 @@ def genmodel(num_units, actfn='relu', reg_coeff=0.0, last_act='softmax'):
 
 def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_act='softmax',
                EStop=True, verbose=1, archs=[], reg_coeffs=[0.0],
-               sgd_lrs=[1e-4], sgd_decays=[0.0], sgd_moms=[0.0], sgd_Nesterov=False,
+               sgd_lrs=[1e-1], sgd_decays=[0.0], sgd_moms=[0.0], sgd_Nesterov=False,
                results_file='results.txt'):
     '''
     Train and test neural network architectures with varying parameters
@@ -170,6 +178,8 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
 #    best_model_mse = None
     call_ES = EarlyStopping(monitor='val_acc', patience=10, verbose=1, mode='auto')
     for arch in archs:
+        arch.insert(0,nin)
+        arch.append(nout)
         for reg_coeff in reg_coeffs:
             for sgd_lr in sgd_lrs:
                 for sgd_decay in sgd_decays:
@@ -246,17 +256,28 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
 #                   results_file = 'particular_2hiddenlayer.txt')
 
 #%% Vary eta and archs
-sgd_lrs = [1e-6,1e-5,5e-5,5e-4,1e-3,1e-2]
-archs = [[nin,900,nout],[nin,1700,nout],[nin,2100,nout],[nin,2900,nout],[nin,3900,nout],[nin,4600,nout]]
+#sgd_lrs = [1e-6,1e-5,5e-5,5e-4,1e-3,1e-2]
+#archs = [[nin,900,nout],[nin,1700,nout],[nin,2100,nout],[nin,2900,nout],[nin,3900,nout],[nin,4600,nout]]
+#model = testmodels(xtr,ytr,xte,yte,
+#                   archs=archs,
+#                   sgd_lrs=sgd_lrs,
+#                   results_file = 'etas_1hiddenlayer.txt')
+#model = testmodels(xtr,ytr,xte,yte,
+#                   archs=[[nin,3900,1500,nout]],
+#                   sgd_lrs=sgd_lrs,
+#                   results_file = 'etas_particular_2hiddenlayer.txt')
+
+#%% Vary eta and archs (>1 hidden layer)
+#model = testmodels(xtr,ytr,xte,yte,
+#                   archs=[[2100]],
+#                   sgd_lrs=np.arange(0.02,0.1,0.01),
+#                   results_file = 'dump.txt')
+archs = [[2000,500],[2000,1000],[2000,1500],[2000,2000],[2000,2500],[2000,1500,500],[2000,1500,1000],[2000,1500,1500],[2000,1500,2000],[2000,1500,2500]]
+sgd_lrs = [0.008,0.01,0.033,0.067,0.1,0.133,0.167,0.2,0.25,0.3,0.35,0.4]
 model = testmodels(xtr,ytr,xte,yte,
                    archs=archs,
                    sgd_lrs=sgd_lrs,
-                   results_file = 'etas_1hiddenlayer.txt')
-model = testmodels(xtr,ytr,xte,yte,
-                   archs=[[nin,3900,1500,nout]],
-                   sgd_lrs=sgd_lrs,
-                   results_file = 'etas_particular_2hiddenlayer.txt')
-
+                   results_file = 'etas_archs_manyhiddenlayers.txt')
 
            
 #%% Do specific input tests
