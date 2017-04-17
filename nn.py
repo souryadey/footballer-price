@@ -220,21 +220,28 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
 #archs = [[nin,a,nout] for a in xrange(100,5001,100)]
 #model,model_mse = testmodels(xtr,ytr,xte,yte, 
 #                             archs=archs,
-#                             results_file = 'archs.txt')
+#                             results_file = 'archs_1hiddenlayer.txt')
 
 #%% Vary activation functions over architectures
 #Possiblities are [relu,soft], [sigm,soft], [tanh,soft], [relu,sigm], [sigm,sigm], [tanh,sigm]
 #[relu,soft] is default. Here I'm trying the next 3
-archs = [[nin,a,nout] for a in xrange(500,4501,1000)]
-model = testmodels(xtr,ytr,xte,yte, actfn='sigmoid',
+#archs = [[nin,a,nout] for a in xrange(500,4501,1000)]
+#model = testmodels(xtr,ytr,xte,yte, actfn='sigmoid',
+#                   archs=archs,
+#                   results_file = 'act_sigmoid.txt')
+#model = testmodels(xtr,ytr,xte,yte, actfn='tanh',
+#                   archs=archs,
+#                   results_file = 'act_tanh.txt')
+#model = testmodels(xtr,ytr,xte,yte, last_act='sigmoid',
+#                   archs=archs,
+#                   results_file = 'lastact_sigmoid.txt')
+
+#%% Vary number of hidden layers in architecture only
+archs = [[nin,2000,3000,nout],[nin,2000,2000,nout],[nin,2000,1500,nout],[nin,2000,1000,nout],[nin,2000,500,nout],[nin,2000,nout,nout]]
+model = testmodels(xtr,ytr,xte,yte,
                    archs=archs,
-                   results_file = 'act_sigmoid.txt')
-model = testmodels(xtr,ytr,xte,yte, actfn='tanh',
-                   archs=archs,
-                   results_file = 'act_tanh.txt')
-model = testmodels(xtr,ytr,xte,yte, last_act='sigmoid',
-                   archs=archs,
-                   results_file = 'lastact_sigmoid.txt')
+                   results_file = 'archs_2hiddenlayers.txt')
+
 
            
 #%% Do specific input tests
