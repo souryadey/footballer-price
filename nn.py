@@ -155,8 +155,8 @@ def neighbor(y_true, y_pred, n=2): ##### NOT WORKING #####
     ''' Trying to do what neighbor_accuracy does later '''
     return K.cast(K.lesser_equal(K.abs(K.argmax(y_pred,axis=-1) - K.argmax(y_true,axis=-1)), n), K.floatx())
 
-def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_act='softmax',
-               EStop=True, verbose=1, archs=[[2000, 1500, 500]], reg_coeffs=[1e-3],
+def testmodels(xtr,ytr,xte,yte, num_epoch=100, batch_size=1, actfn='relu', last_act='softmax',
+               EStop=True, verbose=1, archs=[[2000, 1500, 500]], reg_coeffs=[5e-4],
                sgd_lrs=[0.01], sgd_decays=[0.001], sgd_moms=[0.99], sgd_Nesterov=True,
                results_file='results.txt'):
     '''
@@ -285,8 +285,12 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
 #                   archs=archs,
 #                   sgd_lrs=sgd_lrs,
 #                   results_file = 'etas_archs_manyhiddenlayers.txt')
+#model = testmodels(xtr,ytr,xte,yte,
+#                   results_file = 'reg_1pm3_lessbatchsize.txt')
+
+#%% Final
 model = testmodels(xtr,ytr,xte,yte,
-                   results_file = 'reg_1pm3.txt')
+                   results_file = 'final_epoch100_batch1.txt')
 
            
 #%% Post-processing
@@ -312,6 +316,6 @@ def price_error(model,xte,rounded_prices,num=NUM_TEST):
     avg_pc_error = np.mean(pc_error)
     return (error,pc_error,avg_error,avg_pc_error)
 
-#print neighbor_accuracy(model,xte,yte)
-#print price_error(model,xte,rounded_prices,num=10)
+top5acc = neighbor_accuracy(model,xte,yte)
+error,pc_error,avg_error,avg_pc_error = price_error(model,xte,rounded_prices)
 
