@@ -150,13 +150,13 @@ def genmodel(num_units, actfn='relu', reg_coeff=0.0, last_act='softmax'):
 
 
 def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_act='softmax',
-               EStop=True, verbose=1, archs=[], reg_coeffs=[0.0],
-               sgd_lrs=[1e-1], sgd_decays=[0.0], sgd_moms=[0.0], sgd_Nesterov=False,
+               EStop=True, verbose=1, archs=[[2000, 1500, 500]], reg_coeffs=[0.0],
+               sgd_lrs=[0.01], sgd_decays=[0.0], sgd_moms=[0.0], sgd_Nesterov=False,
                results_file='results.txt'):
     '''
     Train and test neural network architectures with varying parameters
         xtr, ytr, xte, yte: (Training and test) (features and prices)
-        archs: List of architectures
+        archs: List of architectures. ONLY ENTER hidden layer sizes
         actfn: activation function for hidden layers ('relu'/'sigmoid'/'linear'/'softmax')
         last_act: activation function for final layer ('relu'/'sigmoid'/'linear'/'softmax')
         reg_coeffs: Lsit of L2-regularization coefficients
@@ -272,12 +272,19 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
 #                   archs=[[2100]],
 #                   sgd_lrs=np.arange(0.02,0.1,0.01),
 #                   results_file = 'dump.txt')
-archs = [[2000,500],[2000,1000],[2000,1500],[2000,2000],[2000,2500],[2000,1500,500],[2000,1500,1000],[2000,1500,1500],[2000,1500,2000],[2000,1500,2500]]
-sgd_lrs = [0.008,0.01,0.033,0.067,0.1,0.133,0.167,0.2,0.25,0.3,0.35,0.4]
+#archs = [[2000,500],[2000,1000],[2000,1500],[2000,2000],[2000,2500],[2000,1500,500],[2000,1500,1000],[2000,1500,1500],[2000,1500,2000],[2000,1500,2500]]
+#sgd_lrs = [0.008,0.01,0.033,0.067,0.1,0.133,0.167,0.2,0.25,0.3,0.35,0.4]
+#model = testmodels(xtr,ytr,xte,yte,
+#                   archs=archs,
+#                   sgd_lrs=sgd_lrs,
+#                   results_file = 'etas_archs_manyhiddenlayers.txt')
+reg_coeffs = [1e-7,1e-6,1e-5,1e-4]
+sgd_decays = [1e-5,1e-4,1e-3]
+sgd_moms=[0.9]
 model = testmodels(xtr,ytr,xte,yte,
-                   archs=archs,
-                   sgd_lrs=sgd_lrs,
-                   results_file = 'etas_archs_manyhiddenlayers.txt')
+                   reg_coeffs=reg_coeffs,
+                   sgd_decays=sgd_decays,sgd_moms=sgd_moms,sgd_Nesterov=True,
+                   results_file = 'reg_decay_mom9.txt')
 
            
 #%% Do specific input tests
