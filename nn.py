@@ -314,12 +314,12 @@ def price_error(model,xte,rounded_prices,num=NUM_TEST):
 #                   results_file = 'reg_1pm3_lessbatchsize.txt')
 
 #%% Final
-model = testmodels(xtr,ytr,xte,yte, num_epoch=100,
-                   results_file = 'final_epoch100_batch20.txt')
+model = testmodels(xtr,ytr,xte,yte,
+                   results_file = 'FINAL.txt')
 
            
 #%% Post-processing
-model.save(os.path.dirname(os.path.realpath(__file__))+'/model_files/final_epoch100_batch20.h5')
+model.save(os.path.dirname(os.path.realpath(__file__))+'/model_files/FINAL.h5')
 #del model
 #model = load_model(os.path.dirname(os.path.realpath(__file__))+'/model_files/trial.h5')
 top5acc = neighbor_accuracy(model,xte,yte)
