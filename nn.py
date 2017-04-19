@@ -8,6 +8,7 @@ import numpy as np
 np.set_printoptions(threshold=np.inf) #View full arrays in console
 import matplotlib.pyplot as plt
 import os
+import pickle
 from pprint import pprint
 
 from keras.layers import Dense
@@ -324,4 +325,8 @@ model.save(os.path.dirname(os.path.realpath(__file__))+'/model_files/FINAL.h5')
 #model = load_model(os.path.dirname(os.path.realpath(__file__))+'/model_files/trial.h5')
 top5acc = neighbor_accuracy(model,xte,yte)
 error,pc_error,avg_error,avg_pc_error = price_error(model,xte,rounded_prices)
+
+store_file = open('final_storevar.txt','wb')
+pickle.dump((xte,yte,rounded_prices,top5acc,error,pc_error,avg_error,avg_pc_error),store_file)
+store_file.close()
 
