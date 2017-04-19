@@ -4,7 +4,6 @@
 # Uses Deep Learning library Keras 1.1.1 <https://keras.io/>
 
 #%% Imports and constants
-import make_dataset as md
 import numpy as np
 np.set_printoptions(threshold=np.inf) #View full arrays in console
 import matplotlib.pyplot as plt
@@ -17,7 +16,9 @@ import keras.regularizers as Reg
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping
 import keras.backend as K
+from keras.models import load_model
 
+import make_dataset as md
 NUM_TEST = 2500
 NUM_TRAIN = md.NUM_TOTAL - NUM_TEST #12840
 #NUM_VAL = 2000
@@ -151,11 +152,12 @@ def genmodel(num_units, actfn='relu', reg_coeff=0.0, last_act='softmax'):
                             W_regularizer=Reg.l2(l=reg_coeff), init='glorot_normal'))
     return model
 
+
 def neighbor(y_true, y_pred, n=2): ##### NOT WORKING #####
     ''' Trying to do what neighbor_accuracy does later '''
     return K.cast(K.lesser_equal(K.abs(K.argmax(y_pred,axis=-1) - K.argmax(y_true,axis=-1)), n), K.floatx())
 
-def testmodels(xtr,ytr,xte,yte, num_epoch=100, batch_size=1, actfn='relu', last_act='softmax',
+def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_act='softmax',
                EStop=True, verbose=1, archs=[[2000, 1500, 500]], reg_coeffs=[5e-4],
                sgd_lrs=[0.01], sgd_decays=[0.001], sgd_moms=[0.99], sgd_Nesterov=True,
                results_file='results.txt'):
@@ -223,8 +225,31 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=100, batch_size=1, actfn='relu', last_
     return best_model
 
 
+def neighbor_accuracy(model,xte,yte, neighbor_range=2, num=NUM_TEST):
+    ''' Returns percentage of correct = (predicted label is +/- n from accurate label)
+        Eg: If n=2, it's essentially top5 because predicted label can be accurate label -2, -1, +0, +1, +2
+        For some reason this fails if num=1, i.e. single cases can't be tested '''
+    y_pred = model.predict_classes(xte[:num],verbose=0)
+    y_true = np.argmax(yte[:num],axis=1)
+    acc = [np.abs(y_pred[i]-y_true[i])<=neighbor_range for i in xrange(num)]
+    return 100.0*acc.count(True)/num
+
+def price_error(model,xte,rounded_prices,num=NUM_TEST):
+    ''' Returns absolute error between predicted price and actual price, percentage absolute error, and their averages
+        Pass the entire rounded_prices into this, it will automatically extract what's required
+    '''
+    rounded_prices = rounded_prices[NUM_TRAIN:NUM_TRAIN+num]
+    y_pred = model.predict_classes(xte[:num],verbose=0)
+    pred_prices = [prices_bins[i] for i in y_pred]
+    error = [np.abs(pred_prices[i]-rounded_prices[i]) for i in xrange(num)]
+    pc_error = [100.0*error[i]/rounded_prices[i] for i in xrange(num)]
+    avg_error = np.mean(error)
+    avg_pc_error = np.mean(pc_error)
+    return (error,pc_error,avg_error,avg_pc_error)
+
+
 #%% Trial
-#model = testmodels(xtr,ytr,xte,yte,
+#model = testmodels(xtr,ytr,xte,yte, num_epoch=2,
 #                             archs=[[300]],
 #                             results_file = 'trial.txt')
 
@@ -289,33 +314,14 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=100, batch_size=1, actfn='relu', last_
 #                   results_file = 'reg_1pm3_lessbatchsize.txt')
 
 #%% Final
-model = testmodels(xtr,ytr,xte,yte,
-                   results_file = 'final_epoch100_batch1.txt')
+model = testmodels(xtr,ytr,xte,yte, num_epoch=100,
+                   results_file = 'final_epoch100_batch20.txt')
 
            
 #%% Post-processing
-def neighbor_accuracy(model,xte,yte, neighbor_range=2, num=NUM_TEST):
-    ''' Returns percentage of correct = (predicted label is +/- n from accurate label)
-        Eg: If n=2, it's essentially top5 because predicted label can be accurate label -2, -1, +0, +1, +2
-        For some reason this fails if num=1, i.e. single cases can't be tested '''
-    y_pred = model.predict_classes(xte[:num],verbose=0)
-    y_true = np.argmax(yte[:num],axis=1)
-    acc = [np.abs(y_pred[i]-y_true[i])<=neighbor_range for i in xrange(num)]
-    return 100.0*acc.count(True)/num
-
-def price_error(model,xte,rounded_prices,num=NUM_TEST):
-    ''' Returns absolute error between predicted price and actual price, percentage absolute error, and their averages
-        Pass the entire rounded_prices into this, it will automatically extract what's required
-    '''
-    rounded_prices = rounded_prices[NUM_TRAIN:NUM_TRAIN+num]
-    y_pred = model.predict_classes(xte[:num],verbose=0)
-    pred_prices = [prices_bins[i] for i in y_pred]
-    error = [np.abs(pred_prices[i]-rounded_prices[i]) for i in xrange(num)]
-    pc_error = [100.0*error[i]/rounded_prices[i] for i in xrange(num)]
-    avg_error = np.mean(error)
-    avg_pc_error = np.mean(pc_error)
-    return (error,pc_error,avg_error,avg_pc_error)
-
+model.save(os.path.dirname(os.path.realpath(__file__))+'/model_files/final_epoch100_batch20.h5')
+#del model
+#model = load_model(os.path.dirname(os.path.realpath(__file__))+'/model_files/trial.h5')
 top5acc = neighbor_accuracy(model,xte,yte)
 error,pc_error,avg_error,avg_pc_error = price_error(model,xte,rounded_prices)
 
