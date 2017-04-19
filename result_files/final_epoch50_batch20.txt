@@ -1,0 +1,2 @@
+Score for architecture = [41, 2000, 1500, 500, 119], lambda = 0.0005, eta = 0.01, decay = 0.001, momentum = 0.99, actfn = relu: Acc = 38.5600002587%
+Best Config: architecture = [41, 2000, 1500, 500, 119], lambda = 0.0005, eta = 0.01, decay = 0.001, momentum = 0.99, actfn = relu, best_acc = 38.5600002587%

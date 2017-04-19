@@ -315,18 +315,19 @@ def price_error(model,xte,rounded_prices,num=NUM_TEST):
 #                   results_file = 'reg_1pm3_lessbatchsize.txt')
 
 #%% Final
-model = testmodels(xtr,ytr,xte,yte,
-                   results_file = 'FINAL.txt')
+#model = testmodels(xtr,ytr,xte,yte,
+#                   results_file = 'FINAL_xx.txt')
 
            
 #%% Post-processing
-model.save(os.path.dirname(os.path.realpath(__file__))+'/model_files/FINAL.h5')
+#model.save(os.path.dirname(os.path.realpath(__file__))+'/model_files/FINAL_xx.h5')
 #del model
-#model = load_model(os.path.dirname(os.path.realpath(__file__))+'/model_files/trial.h5')
+model = load_model(os.path.dirname(os.path.realpath(__file__))+'/model_files/final_epoch100_batch20.h5')
+top3acc = neighbor_accuracy(model,xte,yte, neighbor_range=1)
 top5acc = neighbor_accuracy(model,xte,yte)
 error,pc_error,avg_error,avg_pc_error = price_error(model,xte,rounded_prices)
 
 store_file = open('final_storevar.txt','wb')
-pickle.dump((xte,yte,rounded_prices,top5acc,error,pc_error,avg_error,avg_pc_error),store_file)
+pickle.dump((xte,yte,rounded_prices,top3acc,top5acc,avg_error,avg_pc_error),store_file)
 store_file.close()
 
