@@ -1,7 +1,6 @@
 ### NEURAL NETWORK ###
-# Source: Nitin Kamra, for USC Fall 2016 CSCI567 HW4
-# Modified and used by Sourya Dey with permission
-# Uses Deep Learning library Keras 1.1.1 <https://keras.io/>
+# USC Sprigng 2017 EE500 Final Project - Sourya Dey
+# Uses Deep Learning library Keras 1.1.1 <https://keras.io/> with backend Theano
 
 #%% Imports and constants
 import numpy as np
@@ -27,7 +26,7 @@ NUM_TRAIN = md.NUM_TOTAL - NUM_TEST #12840
 
 #%% Data preprocessing
 def normalize(features):
-    ''' Normalize features by converting to N(0,1)'''
+    ''' Normalize features by converting to mean=0, std=1) '''
     mu = np.mean(features, axis=0)
     sigma = np.std(features, axis=0)
     features = (features-mu)/sigma
@@ -52,8 +51,9 @@ def opt_price_hist(prices,bins):
     print binfreq
 
 def categorical_prices(prices,bins):
-    ''' Main function: Split prices into one-hot based on intervals in bins
-        Side function: Create new price array which rounds outliers based on intervals in bins
+    ''' 
+    Main function: Split prices into one-hot based on intervals in bins
+    Side function: Create new price array which rounds outliers based on intervals in bins
         bins: A list with the starting points of each interval and ending point of the last interval.
             Must be in ascending order
         Eg: If bins = [100,200,300,401], then there are 3 bins - [100,200), [200,300) and [300,401)
@@ -129,6 +129,8 @@ nout = len(ytr[1])
 #%% Neural network
 def genmodel(num_units, actfn='relu', reg_coeff=0.0, last_act='softmax'):
     '''
+    Source: Nitin Kamra, for USC Fall 2016 CSCI567 HW4
+    Modified and used by Sourya Dey with permission
     Generate a neural network model of approporiate architecture
     Glorot normal initialization used for all layers
         num_units: architecture of network in the format [n1, n2, ... , nL]
@@ -163,6 +165,8 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
                sgd_lrs=[0.01], sgd_decays=[0.001], sgd_moms=[0.99], sgd_Nesterov=True,
                results_file='results.txt'):
     '''
+    Source: Nitin Kamra, for USC Fall 2016 CSCI567 HW4
+    Modified and used by Sourya Dey with permission
     Train and test neural network architectures with varying parameters
         xtr, ytr, xte, yte: (Training and test) (features and prices)
         archs: List of architectures. ONLY ENTER hidden layer sizes
@@ -177,6 +181,8 @@ def testmodels(xtr,ytr,xte,yte, num_epoch=50, batch_size=20, actfn='relu', last_
         sgd_Nesterov: Boolean variable to use/not use momentum
         EStop: Boolean variable to use/not use early stopping
         verbose: 0 or 1 to determine whether keras gives out training and test progress report
+    Returns the Keras model with best accuracy
+    Commented out: Keras model with least mean square error
     '''
     f = open(os.path.dirname(os.path.realpath(__file__))+'/result_files/'+results_file,'wb')
     best_acc = 0
@@ -249,6 +255,7 @@ def price_error(model,xte,rounded_prices,num=NUM_TEST):
     return (error,pc_error,avg_error,avg_pc_error)
 
 
+########## MAIN EXECUTION ##########
 #%% Trial
 #model = testmodels(xtr,ytr,xte,yte, num_epoch=2,
 #                             archs=[[300]],
@@ -327,7 +334,8 @@ top3acc = neighbor_accuracy(model,xte,yte, neighbor_range=1)
 top5acc = neighbor_accuracy(model,xte,yte)
 error,pc_error,avg_error,avg_pc_error = price_error(model,xte,rounded_prices)
 
-store_file = open('final_storevar.txt','wb')
-pickle.dump((xte,yte,rounded_prices,top3acc,top5acc,avg_error,avg_pc_error),store_file)
-store_file.close()
+#%% Save variables, if desired
+#store_file = open('final_storevar.txt','wb')
+#pickle.dump((xte,yte,rounded_prices,top3acc,top5acc,avg_error,avg_pc_error),store_file)
+#store_file.close()
 
